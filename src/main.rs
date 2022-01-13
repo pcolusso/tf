@@ -7,7 +7,8 @@ enum Commands {
     SetEnv(SetEnv),
     Plan(Plan),
     Apply(Apply),
-    Destroy(Destroy)
+    Destroy(Destroy),
+    Init
 }
 
 #[derive(Args)]
@@ -53,7 +54,11 @@ struct Apply {
 }
 
 fn apply(opts: Apply) -> Result<(), Box<dyn Error>> {
-    let mut args = vec!("apply", "-var-file=envs/$ENV/main.tfvars");
+    check_env()?;
+    let env = env::var("ENV")?;
+    let file = Path::new("envs").join(env).join("main.tfvars");
+    let file_str = file.to_string_lossy();
+    let mut args = vec!("destroy", "-var-file", &file_str);
     if opts.auto_approve { args.push("--auto-approve"); }
 
     run_terraform(args)?;
@@ -91,6 +96,16 @@ fn destroy() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+fn init() -> Result<(), Box<dyn Error>> {
+    check_env()?;
+    let env = env::var("ENV")?;
+    let file = Path::new("envs").join(env).join("terraform_state.tfvars");
+    
+    run_terraform(["init", "-backend-config", &file.to_string_lossy()])?;
+
+    Ok(())
+}
+
 // Helpers
 
 fn check_env() -> Result<(), Box<dyn Error>> {
@@ -117,6 +132,7 @@ fn main() -> Result<(), Box<dyn Error>>{
         Commands::Apply(a) => apply(a)?,
         Commands::Plan(_) => plan()?,
         Commands::Destroy(_) => destroy()?,
+        Commands::Init => init()?,
     }
 
     Ok(())
