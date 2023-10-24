@@ -65,7 +65,7 @@ fn apply(opts: Apply) -> Result<()> {
     let env = env::var("ENV").context("ENV var not set")?;
     let file = Path::new("envs").join(env).join("main.tfvars");
     let file_str = file.to_string_lossy();
-    let mut args = vec!["destroy", "-var-file", &file_str];
+    let mut args = vec!["apply", "-var-file", &file_str];
     if opts.auto_approve {
         args.push("--auto-approve");
     }
