@@ -116,8 +116,8 @@ fn init() -> Result<()> {
 // Helpers
 
 fn check_env() -> Result<()> {
-    env::var("ENV")?;
-    env::var("AWS_PROFILE")?;
+    env::var("ENV").context("ENV environment variable not set")?;
+    env::var("AWS_PROFILE").context("AWS_PROFILE environment variable not set.")?;
 
     Ok(())
 }
@@ -126,8 +126,8 @@ fn run_terraform<'a>(args: impl IntoIterator<Item = &'a str>) -> Result<()> {
     Command::new("terraform")
         .args(args)
         .stdout(Stdio::inherit())
-        .spawn()?
-        .wait()?;
+        .spawn().context("Cannot run Terraform")?
+        .wait().context("Issue waiting for Terraform to complete")?;
 
     Ok(())
 }
